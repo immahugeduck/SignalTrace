@@ -29,6 +29,11 @@ render.experimental.xml
 # ...except the shared, non-secret debug keystore checked in for local builds.
 !SignalTrace/android/app/debug.keystore
 
+# Secrets / local env (keep .env.example, ignore real values)
+.env
+.env.local
+*.env
+
 # Google Services (e.g. APIs or Firebase)
 google-services.json
 

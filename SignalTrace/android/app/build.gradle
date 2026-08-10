@@ -32,6 +32,14 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "0.1.0"
+
+        // Google Maps key for react-native-maps. Sourced (in order) from a
+        // -PMAPS_API_KEY Gradle prop, a gradle.properties entry, or the
+        // MAPS_API_KEY env var (used by CI). Never hard-code it here.
+        manifestPlaceholders = [
+            MAPS_API_KEY: (project.findProperty("MAPS_API_KEY")
+                ?: System.getenv("MAPS_API_KEY") ?: "")
+        ]
     }
     signingConfigs {
         debug {

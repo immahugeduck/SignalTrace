@@ -28,6 +28,11 @@
         android:allowBackup="false"
         android:theme="@style/AppTheme"
         android:supportsRtl="true">
+        <!-- Injected at build time from the MAPS_API_KEY placeholder (see
+             app/build.gradle). react-native-maps needs this to render. -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${MAPS_API_KEY}" />
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
