@@ -11,11 +11,14 @@ export async function ensureAndroidSignalPermissions(): Promise<boolean> {
     return false;
   }
 
+  // Only dangerous (runtime) permissions belong here. ACCESS_NETWORK_STATE and
+  // INTERNET are normal permissions declared in the manifest, and
+  // PACKAGE_USAGE_STATS is a special-access permission granted from system
+  // Settings (see requestUsageAccess in trafficMonitor).
   const requiredPermissions = [
     PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
     PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION,
     PERMISSIONS.ANDROID.READ_PHONE_STATE,
-    PERMISSIONS.ANDROID.ACCESS_NETWORK_STATE,
   ];
 
   const checks = await checkMultiple(requiredPermissions);

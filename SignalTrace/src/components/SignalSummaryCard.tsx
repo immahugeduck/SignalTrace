@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { ScanSnapshot } from '@/types';
+import { classifySignalQuality } from '@/utils/signalQuality';
 
 interface SignalSummaryCardProps {
   latest?: ScanSnapshot;
@@ -17,12 +18,21 @@ export function SignalSummaryCard({ latest }: SignalSummaryCardProps): React.JSX
   }
 
   const ghost = latest.ghostAssessment;
+  const quality = classifySignalQuality(latest.reading);
   return (
     <View style={styles.card}>
       <Text style={styles.title}>Current Cell Snapshot</Text>
+      <View style={styles.qualityRow}>
+        <Text style={styles.text}>Signal: {quality.label}</Text>
+        <View style={styles.barTrack}>
+          <View style={[styles.barFill, { width: `${quality.bars}%` }]} />
+        </View>
+      </View>
       <Text style={styles.text}>Radio: {latest.reading.radioType}</Text>
       <Text style={styles.text}>CID: {latest.reading.cid ?? 'Unknown'}</Text>
-      <Text style={styles.text}>RSRP: {latest.reading.rsrp ?? 'N/A'}</Text>
+      <Text style={styles.text}>
+        RSRP: {latest.reading.rsrp != null ? `${latest.reading.rsrp} dBm` : 'N/A'}
+      </Text>
       <Text style={styles.text}>Ghost Risk Score: {ghost.score}</Text>
       <Text style={[styles.badge, ghost.isLikelyGhost ? styles.badgeDanger : styles.badgeSafe]}>
         {ghost.isLikelyGhost ? 'Suspicious Tower Pattern' : 'No High-Risk Pattern'}
@@ -49,6 +59,23 @@ const styles = StyleSheet.create({
   text: {
     color: '#dbeafe',
     fontSize: 14,
+  },
+  qualityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  barTrack: {
+    flex: 1,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: '#1e293b',
+    overflow: 'hidden',
+  },
+  barFill: {
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: '#38bdf8',
   },
   badge: {
     marginTop: 10,

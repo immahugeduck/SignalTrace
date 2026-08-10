@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#020617"
+        android:pathData="M0,0h108v108h-108z" />
+    <!-- Signal arcs -->
+    <path
+        android:strokeColor="#38bdf8"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M40,68 a24,24 0 0 1 28,0" />
+    <path
+        android:strokeColor="#38bdf8"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M32,60 a36,36 0 0 1 44,0" />
+    <path
+        android:strokeColor="#f59e0b"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M24,52 a48,48 0 0 1 60,0" />
+    <path
+        android:fillColor="#f8fafc"
+        android:pathData="M54,66 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
+</vector>

@@ -50,6 +50,30 @@ export function assessGhostTower(
     reasons.push('Strong serving signal with no normal neighboring cells detected.');
   }
 
+  // An IMSI catcher frequently keeps the same PCI/CID pair while the operator
+  // identity (MCC/MNC) or LAC/TAC flips versus what we have seen historically.
+  const historicalForCid = recentReadings.filter(
+    (item) => item.cid != null && item.cid === reading.cid,
+  );
+  const mncMismatch = historicalForCid.some(
+    (item) => item.mnc != null && reading.mnc != null && item.mnc !== reading.mnc,
+  );
+  if (mncMismatch) {
+    score += 25;
+    reasons.push('Same cell ID observed under a different operator (MNC) — spoofing indicator.');
+  }
+
+  // Downgrade attacks force a modern handset onto 2G/GSM to strip encryption.
+  if (reading.radioType === 'GSM') {
+    const hasSeenModern = recentReadings.some(
+      (item) => item.radioType === 'LTE' || item.radioType === 'NR' || item.radioType === 'WCDMA',
+    );
+    if (hasSeenModern) {
+      score += 20;
+      reasons.push('Unexpected downgrade to 2G/GSM after using LTE/5G — possible downgrade attack.');
+    }
+  }
+
   const normalized = normalizeScore(score);
   return {
     score: normalized,

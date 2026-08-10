@@ -8,12 +8,15 @@ import {
   Text,
   View,
 } from 'react-native';
+import { DataAnomalyList } from '@/components/DataAnomalyList';
+import { DataUsageCard } from '@/components/DataUsageCard';
 import { SignalSummaryCard } from '@/components/SignalSummaryCard';
 import { TowerList } from '@/components/TowerList';
 import { TowerMap } from '@/components/TowerMap';
 import { appConfig, hasTowerApisConfigured } from '@/config';
 import { ensureAndroidSignalPermissions } from '@/services/permissions';
 import { useSignalStore } from '@/store/useSignalStore';
+import { useTrafficStore } from '@/store/useTrafficStore';
 
 export default function App(): React.JSX.Element {
   const snapshots = useSignalStore((state) => state.snapshots);
@@ -21,6 +24,15 @@ export default function App(): React.JSX.Element {
   const startScan = useSignalStore((state) => state.startScan);
   const stopScan = useSignalStore((state) => state.stopScan);
   const lastError = useSignalStore((state) => state.lastError);
+
+  const trafficLatest = useTrafficStore((state) => state.latest);
+  const trafficSupported = useTrafficStore((state) => state.supported);
+  const usageAccessGranted = useTrafficStore((state) => state.usageAccessGranted);
+  const anomalies = useTrafficStore((state) => state.anomalies);
+  const startMonitoring = useTrafficStore((state) => state.startMonitoring);
+  const stopMonitoring = useTrafficStore((state) => state.stopMonitoring);
+  const openUsageAccessSettings = useTrafficStore((state) => state.openUsageAccessSettings);
+  const trafficError = useTrafficStore((state) => state.lastError);
 
   const latest = useMemo(() => snapshots.at(-1), [snapshots]);
 
@@ -30,7 +42,12 @@ export default function App(): React.JSX.Element {
       return;
     }
 
-    await startScan();
+    await Promise.all([startScan(), startMonitoring()]);
+  }
+
+  function handleStopScan(): void {
+    stopScan();
+    stopMonitoring();
   }
 
   return (
@@ -39,16 +56,23 @@ export default function App(): React.JSX.Element {
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.heading}>SignalTrace</Text>
         <Text style={styles.subtitle}>
-          Android cellular signal and suspicious tower analyzer
+          Android cellular signal, suspicious tower, and data-traffic analyzer
         </Text>
 
         <SignalSummaryCard latest={latest} />
         <TowerMap snapshots={snapshots} />
 
+        <DataUsageCard
+          latest={trafficLatest}
+          supported={trafficSupported}
+          usageAccessGranted={usageAccessGranted}
+          onRequestUsageAccess={openUsageAccessSettings}
+        />
+
         <View style={styles.controls}>
           <Pressable
             style={[styles.button, isScanning ? styles.buttonMuted : styles.buttonPrimary]}
-            onPress={isScanning ? stopScan : handleStartScan}
+            onPress={isScanning ? handleStopScan : handleStartScan}
           >
             <Text style={styles.buttonLabel}>{isScanning ? 'Stop Scan' : 'Start Scan'}</Text>
           </Pressable>
@@ -67,6 +91,10 @@ export default function App(): React.JSX.Element {
         ) : null}
 
         {lastError ? <Text style={styles.errorText}>{lastError}</Text> : null}
+        {trafficError ? <Text style={styles.errorText}>{trafficError}</Text> : null}
+
+        <Text style={styles.listTitle}>Network Alerts</Text>
+        <DataAnomalyList anomalies={anomalies} />
 
         <Text style={styles.listTitle}>Recent Cells</Text>
         <TowerList snapshots={snapshots} />
