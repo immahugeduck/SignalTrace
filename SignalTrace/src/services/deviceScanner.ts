@@ -1,21 +1,6 @@
 import NetInfo from '@react-native-community/netinfo';
 import { CellReading, RadioType } from '@/types';
-
-interface NativeCellInfo {
-  mcc?: number;
-  mnc?: number;
-  lac?: number;
-  tac?: number;
-  cid?: number;
-  pci?: number;
-  arfcn?: number;
-  rsrp?: number;
-  rsrq?: number;
-  rssi?: number;
-  sinr?: number;
-  neighboringCellCount?: number;
-  radioType?: string;
-}
+import { NativeCellReading, cellScannerModule } from '@/native/SignalTraceNative';
 
 function parseRadioType(value?: string): RadioType {
   switch (value?.toUpperCase()) {
@@ -30,7 +15,7 @@ function parseRadioType(value?: string): RadioType {
   }
 }
 
-function mapNativeReading(item: NativeCellInfo): CellReading {
+function mapNativeReading(item: NativeCellReading): CellReading {
   return {
     timestamp: Date.now(),
     radioType: parseRadioType(item.radioType),
@@ -50,10 +35,14 @@ function mapNativeReading(item: NativeCellInfo): CellReading {
 }
 
 async function readFromNativeModule(): Promise<CellReading[]> {
+  if (!cellScannerModule) {
+    // Native module not present (e.g. running under Metro without the Android
+    // build, or in tests). Callers fall back to NetInfo-derived context.
+    return [];
+  }
+
   try {
-    // This keeps the app buildable even before installing a TelephonyManager bridge.
-    const cellularInfo = require('react-native-cellular-info');
-    const current = (await cellularInfo.getCellInfo()) as NativeCellInfo[];
+    const current = await cellScannerModule.getCellInfo();
     return current.map(mapNativeReading);
   } catch {
     return [];
@@ -66,20 +55,14 @@ export async function scanCellReadings(): Promise<CellReading[]> {
     return readings;
   }
 
-  // Fallback path provides minimal live context until native cellular plugin is connected.
+  // Fallback path provides minimal live context until the native cellular
+  // module is available. It cannot report tower IDs or power, so ghost
+  // detection is effectively disabled for these readings.
   const networkState = await NetInfo.fetch();
   const fallback: CellReading = {
     timestamp: Date.now(),
-    radioType: 'UNKNOWN',
-    rsrp: undefined,
-    rsrq: undefined,
-    rssi: undefined,
-    sinr: undefined,
+    radioType: networkState.type === 'cellular' ? 'LTE' : 'UNKNOWN',
   };
-
-  if (networkState.type === 'cellular') {
-    fallback.radioType = 'LTE';
-  }
 
   return [fallback];
 }
