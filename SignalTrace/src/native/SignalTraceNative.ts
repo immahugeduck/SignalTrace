@@ -1,4 +1,4 @@
-import { NativeModules } from 'react-native';
+import { NativeEventEmitter, NativeModules } from 'react-native';
 import { AppTrafficSample, TrafficSample } from '@/types';
 
 /**
@@ -45,9 +45,41 @@ export interface TrafficModule {
   requestUsageAccess(): Promise<void>;
 }
 
+/** Raw BLE advertisement payload emitted by the native scanner. */
+export interface NativeBleDevice {
+  address: string;
+  name?: string;
+  rssi: number;
+  txPower?: number;
+  timestamp: number;
+  type?: string;
+  bondState?: string;
+  connectable?: boolean;
+  manufacturerId?: number;
+  manufacturerData?: string;
+}
+
+export interface BleScannerModule {
+  isSupported(): Promise<boolean>;
+  isEnabled(): Promise<boolean>;
+  startScan(): Promise<boolean>;
+  stopScan(): Promise<boolean>;
+  addListener(eventName: string): void;
+  removeListeners(count: number): void;
+}
+
+export interface OrientationModule {
+  start(): Promise<boolean>;
+  stop(): Promise<boolean>;
+  addListener(eventName: string): void;
+  removeListeners(count: number): void;
+}
+
 interface NativeModuleRegistry {
   SignalTraceCellScanner?: CellScannerModule;
   SignalTraceTraffic?: TrafficModule;
+  SignalTraceBleScanner?: BleScannerModule;
+  SignalTraceOrientation?: OrientationModule;
 }
 
 const modules = NativeModules as NativeModuleRegistry;
@@ -56,3 +88,27 @@ export const cellScannerModule: CellScannerModule | undefined =
   modules.SignalTraceCellScanner;
 
 export const trafficModule: TrafficModule | undefined = modules.SignalTraceTraffic;
+
+export const bleScannerModule: BleScannerModule | undefined = modules.SignalTraceBleScanner;
+
+export const orientationModule: OrientationModule | undefined =
+  modules.SignalTraceOrientation;
+
+/** Native event names emitted through RCTDeviceEventEmitter. */
+export const BLE_DEVICE_EVENT = 'SignalTraceBleDevice';
+export const BLE_SCAN_FAILED_EVENT = 'SignalTraceBleScanFailed';
+export const HEADING_EVENT = 'SignalTraceHeading';
+
+export function createBleEmitter(): NativeEventEmitter | undefined {
+  if (!bleScannerModule) {
+    return undefined;
+  }
+  return new NativeEventEmitter(bleScannerModule as unknown as never);
+}
+
+export function createOrientationEmitter(): NativeEventEmitter | undefined {
+  if (!orientationModule) {
+    return undefined;
+  }
+  return new NativeEventEmitter(orientationModule as unknown as never);
+}

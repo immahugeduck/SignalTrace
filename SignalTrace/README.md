@@ -44,36 +44,62 @@ indicators:
   uploads, and outbound‑heavy (exfiltration‑like) ratios, per‑device and per‑app
   (`DataAnomalyList`).
 
+### 5. Live Bluetooth tracking (Bluetooth tab)
+- **`BleScannerModule`** streams every BLE advertisement (address, name, RSSI,
+  TX power, type, bond state, manufacturer data) into a live **nearby‑devices
+  list** with a *Real‑time data* toggle (`BleDeviceList`).
+- Per‑device **signal‑strength‑over‑time chart** (`BleSignalChart`) and an
+  **RSSI→distance** estimate via a log‑distance path‑loss model
+  (`rssiToDistanceMeters`).
+- **Direction‑finding radar** (`BleRadar`): using the rotation‑vector sensor
+  (`OrientationModule`) it collects `(heading, rssi)` samples as you move and
+  estimates the bearing to the device (`bearingEstimator`) — an AR‑relative
+  compass where turning the phone toward the device brings the blip to the top.
+  RSSI direction‑finding on one antenna is approximate, so a confidence score is
+  shown alongside.
+
 ## Architecture
 
 ```
-App.tsx
-├── store/useSignalStore.ts     cell scanning loop + ghost scoring
-├── store/useTrafficStore.ts    traffic sampling loop + anomaly detection
+App.tsx                          Cellular / Bluetooth tab shell
+├── components/CellularScreen.tsx cellular dashboard
+├── components/BluetoothScreen.tsx Bluetooth dashboard (list + detail + radar)
+├── store/useSignalStore.ts       cell scanning loop + ghost scoring
+├── store/useTrafficStore.ts      traffic sampling loop + anomaly detection
+├── store/useBleStore.ts          BLE scan stream + realtime toggle + radar
 ├── services/
-│   ├── deviceScanner.ts        native cell bridge (+ NetInfo fallback)
-│   ├── ghostDetector.ts        rogue‑tower heuristics
-│   ├── towerResolver.ts        OpenCellID → WiGLE lookup
-│   ├── trafficMonitor.ts       TrafficStats / NetworkStats bridge + math
-│   └── anomalyDetector.ts      unusual‑traffic heuristics
-├── native/SignalTraceNative.ts typed access to the native modules
-└── android/.../com/signaltrace  Kotlin native modules (see below)
+│   ├── deviceScanner.ts          native cell bridge (+ NetInfo fallback)
+│   ├── ghostDetector.ts          rogue‑tower heuristics
+│   ├── towerResolver.ts          OpenCellID → WiGLE lookup
+│   ├── trafficMonitor.ts         TrafficStats / NetworkStats bridge + math
+│   ├── anomalyDetector.ts        unusual‑traffic heuristics
+│   ├── bleTracker.ts             advertisement → BleDevice folding
+│   └── bearingEstimator.ts       (heading, rssi) → bearing estimate
+├── native/SignalTraceNative.ts   typed access to the native modules + events
+└── android/.../com/signaltrace   Kotlin native modules (see below)
 ```
 
 The JavaScript layer degrades gracefully when the native modules aren't present
 (e.g. Metro without a native build, or unit tests): cell scanning falls back to
-`NetInfo` context and traffic monitoring reports "unsupported".
+`NetInfo` context, and traffic/Bluetooth report "unsupported".
 
 ### Native modules (Kotlin)
 - `CellScannerModule` (`SignalTraceCellScanner`) — `getCellInfo()`.
 - `TrafficModule` (`SignalTraceTraffic`) — `getDeviceTraffic()`,
   `getAppTraffic(start, end)`, `hasUsageAccess()`, `requestUsageAccess()`.
+- `BleScannerModule` (`SignalTraceBleScanner`) — `startScan()`/`stopScan()`,
+  emits `SignalTraceBleDevice` events.
+- `OrientationModule` (`SignalTraceOrientation`) — `start()`/`stop()`, emits
+  `SignalTraceHeading` events from the rotation‑vector sensor.
 - Registered by `SignalTracePackage`.
 
 ## Permissions
-Requested at runtime (`ensureAndroidSignalPermissions`):
-`ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `READ_PHONE_STATE` — fine
-location is required by `getAllCellInfo()` to return tower identities.
+Requested at runtime:
+- Cellular (`ensureAndroidSignalPermissions`): `ACCESS_FINE_LOCATION`,
+  `ACCESS_COARSE_LOCATION`, `READ_PHONE_STATE` — fine location is required by
+  `getAllCellInfo()` to return tower identities.
+- Bluetooth (`ensureBluetoothPermissions`): `BLUETOOTH_SCAN` + `BLUETOOTH_CONNECT`
+  on Android 12+, falling back to `ACCESS_FINE_LOCATION` on older releases.
 
 Declared in the manifest / granted via Settings: `INTERNET`,
 `ACCESS_NETWORK_STATE`, and the special‑access `PACKAGE_USAGE_STATS` (tap

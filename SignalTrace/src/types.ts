@@ -101,3 +101,50 @@ export interface TrafficAnomaly {
   packageName?: string;
   appLabel?: string;
 }
+
+/** A single RSSI reading for a Bluetooth device at a point in time. */
+export interface BleSignalSample {
+  timestamp: number;
+  rssi: number;
+}
+
+export type BleDeviceType = 'BR/EDR' | 'LE' | 'BR/EDR/LE' | 'UNKNOWN';
+
+/**
+ * A nearby Bluetooth device, accumulated from the live advertisement stream.
+ * `rssi` is the latest reading; `history` is a bounded rolling window used for
+ * the signal-strength chart.
+ */
+export interface BleDevice {
+  address: string;
+  name?: string;
+  rssi: number;
+  txPower?: number;
+  type: BleDeviceType;
+  bondState: string;
+  connectable: boolean;
+  manufacturerId?: number;
+  manufacturerData?: string;
+  firstSeenAt: number;
+  lastSeenAt: number;
+  /** Estimated distance in metres from the RSSI path-loss model. */
+  distanceMeters: number;
+  history: BleSignalSample[];
+}
+
+/** One (heading, rssi) observation captured while direction-finding. */
+export interface BearingSample {
+  heading: number;
+  rssi: number;
+  timestamp: number;
+}
+
+/** Result of estimating which direction a device is in from bearing samples. */
+export interface BearingEstimate {
+  /** Best-guess bearing in degrees (0-360, clockwise from north), or null. */
+  bearing: number | null;
+  /** 0-1 confidence based on sample spread and signal contrast. */
+  confidence: number;
+  distanceMeters: number;
+  sampleCount: number;
+}
