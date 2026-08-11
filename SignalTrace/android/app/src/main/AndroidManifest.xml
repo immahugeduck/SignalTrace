@@ -11,6 +11,25 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
+    <!-- Bluetooth LE scanning + tracking. BLUETOOTH_SCAN/CONNECT are the
+         Android 12+ runtime permissions; the legacy BLUETOOTH/BLUETOOTH_ADMIN
+         cover older releases. usesPermissionFlags=neverForLocation lets us scan
+         without location on 12+ (we do not derive location from BLE). -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="s" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" tools:targetApi="s" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="false" />
+
     <!-- Per-app data traffic monitoring (NetworkStatsManager). Special access;
          granted by the user from the system Usage Access settings screen. -->
     <uses-permission

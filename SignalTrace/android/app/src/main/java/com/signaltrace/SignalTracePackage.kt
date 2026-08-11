@@ -13,6 +13,8 @@ class SignalTracePackage : ReactPackage {
         listOf(
             CellScannerModule(reactContext),
             TrafficModule(reactContext),
+            BleScannerModule(reactContext),
+            OrientationModule(reactContext),
         )
 
     override fun createViewManagers(
