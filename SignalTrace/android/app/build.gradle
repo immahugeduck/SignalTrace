@@ -1,6 +1,10 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+// Injects .env values (OPENCELLID_API_KEY, WIGLE_API_TOKEN, …) as BuildConfig +
+// resource fields so react-native-config can read them at runtime. Autolinking
+// links the module but does NOT apply this script — it must be manual.
+apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
 
 /**
  * This is the configuration block to customize your React Native Android app.
