@@ -120,8 +120,6 @@ Environment variables (via `react-native-config`, see `.env.example`):
 `SIGNALTRACE_API_BASE_URL` (optional).
 
 ### Notes on the Android project
-The `android/` folder follows the React Native 0.76 template. The Gradle
-**wrapper jar** (`android/gradle/wrapper/gradle-wrapper.jar` + `gradlew`
-scripts) is not committed — generate it once with `gradle wrapper` or let the
-React Native CLI provide it. `react-native-maps` needs a Google Maps API key in
-the manifest to render the map on device.
+The `android/` folder follows the React Native 0.76 template and includes the
+Gradle 8.10.2 wrapper. `react-native-maps` needs a Google Maps API key in the
+manifest to render the map on device.
