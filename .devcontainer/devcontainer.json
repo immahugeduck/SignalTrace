@@ -10,7 +10,8 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"Shopify.ruby-lsp"
+				"Shopify.ruby-lsp",
+				"Anthropic.claude-code"
 			]
 		}
 	}
