@@ -124,6 +124,33 @@ The `android/` folder follows the React Native 0.76 template and includes the
 Gradle 8.10.2 wrapper. `react-native-maps` needs a Google Maps API key in the
 manifest to render the map on device.
 
+## Codespaces / Dev Container
+
+Opening this repo in GitHub Codespaces (or VS Code's Dev Containers) uses
+[`.devcontainer/devcontainer.json`](../.devcontainer/devcontainer.json), which
+provisions:
+- **JDK 17** (Eclipse Temurin) and **Node 20** via official devcontainer features.
+- The **Android SDK** — platform 35, build-tools 35.0.0, NDK 27.1.12297006,
+  CMake 3.22.1 — installed by
+  [`.devcontainer/install-android-sdk.sh`](../.devcontainer/install-android-sdk.sh)
+  to match exactly what `android/build.gradle` pins. `ANDROID_HOME` is set for
+  you, so no `local.properties` is needed.
+- `npm install`, run automatically after the container is created.
+
+**What it's for, and what it isn't for.** This container gives you a working
+toolchain for `npm run typecheck` and Gradle builds
+(`./gradlew assembleDebug`, `./gradlew bundleRelease`, etc. — see Deployment
+below). It is **not** a place to run/test the app interactively:
+- Codespaces containers have no nested virtualization, so the **Android
+  emulator cannot run** inside one.
+- A cloud Codespace and your phone are **not on the same network**, so
+  wireless ADB debugging (`adb connect <phone-ip>`) doesn't reach it either —
+  that only works when both are on the same LAN.
+
+For live on-device testing, run `npm run android` from a local machine with a
+connected device/emulator, or build in the Codespace and pull the resulting
+APK/AAB down to sideload or upload for testing.
+
 ## Deployment
 
 SignalTrace is a native Android app, not a web service — it must be built
