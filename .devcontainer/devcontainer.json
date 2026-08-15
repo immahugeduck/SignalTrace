@@ -1,29 +1,63 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/debian
+// For format details, see https://aka.ms/devcontainer.json.
 {
-	"name": "Debian",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"name": "SignalTrace (Android / React Native)",
 	"image": "mcr.microsoft.com/devcontainers/base:trixie",
+
 	"features": {
-		"ghcr.io/devcontainer-config/features/dot-config:4": {}
+		// JDK 17 (Eclipse Temurin) — required by the Android Gradle Plugin / RN 0.76.
+		"ghcr.io/devcontainers/features/java:1": {
+			"version": "17",
+			"jdkDistro": "tem",
+			"installGradle": false
+		},
+		// Node 20, matching the version cloudbuild.yaml builds with.
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "20"
+		}
 	},
+
+	// Installs the Android SDK platform/build-tools/NDK/CMake this project's
+	// android/build.gradle already pins, and accepts the SDK licenses.
+	// Runs once, when the container is first created.
+	"onCreateCommand": "bash .devcontainer/install-android-sdk.sh",
+
+	// Installs JS dependencies. Runs once after container creation.
+	"postCreateCommand": "cd SignalTrace && npm install",
+
+	"containerEnv": {
+		"ANDROID_HOME": "/home/vscode/android-sdk",
+		"ANDROID_SDK_ROOT": "/home/vscode/android-sdk",
+		"PATH": "${containerEnv:PATH}:/home/vscode/android-sdk/cmdline-tools/latest/bin:/home/vscode/android-sdk/platform-tools:/home/vscode/android-sdk/emulator"
+	},
+
+	"forwardPorts": [8081],
+	"portsAttributes": {
+		"8081": {
+			"label": "Metro bundler",
+			"onAutoForward": "notify"
+		}
+	},
+
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"Shopify.ruby-lsp",
-				"Anthropic.claude-code"
+				"Anthropic.claude-code",
+				"msjsdiag.vscode-react-native"
 			]
 		}
+	},
+
+	// A Gradle build (esp. with the NDK) is memory/CPU hungry; hint Codespaces
+	// toward a bigger default machine type than the 2-core minimum.
+	"hostRequirements": {
+		"cpus": 4,
+		"memory": "8gb"
 	}
 
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-
-	// Configure tool-specific properties.
-	// "customizations": {},
+	// Codespaces containers cannot run the Android emulator or reach a phone
+	// on your local network (no nested virtualization, no shared LAN) — this
+	// container is for typecheck/lint/Gradle builds, not on-device testing.
+	// See the "Codespaces / Dev Container" section in SignalTrace/README.md.
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
