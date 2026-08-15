@@ -52,13 +52,26 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            // Populated from -P Gradle props (local.properties) or env vars in
+            // CI. Falls back to the debug keystore only when unset, so local
+            // `assembleRelease` still works without a real signing key.
+            def storePath = project.findProperty("RELEASE_STORE_FILE") ?: System.getenv("RELEASE_STORE_FILE")
+            if (storePath) {
+                storeFile file(storePath)
+                storePassword project.findProperty("RELEASE_STORE_PASSWORD") ?: System.getenv("RELEASE_STORE_PASSWORD")
+                keyAlias project.findProperty("RELEASE_KEY_ALIAS") ?: System.getenv("RELEASE_KEY_ALIAS")
+                keyPassword project.findProperty("RELEASE_KEY_PASSWORD") ?: System.getenv("RELEASE_KEY_PASSWORD")
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            signingConfig signingConfigs.debug
+            def storePath = project.findProperty("RELEASE_STORE_FILE") ?: System.getenv("RELEASE_STORE_FILE")
+            signingConfig storePath ? signingConfigs.release : signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }

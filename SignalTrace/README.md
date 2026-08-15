@@ -123,3 +123,32 @@ Environment variables (via `react-native-config`, see `.env.example`):
 The `android/` folder follows the React Native 0.76 template and includes the
 Gradle 8.10.2 wrapper. `react-native-maps` needs a Google Maps API key in the
 manifest to render the map on device.
+
+## Deployment
+
+SignalTrace is a native Android app, not a web service — it must be built
+with Gradle and uploaded as an APK/AAB. **Do not use Cloud Build's
+"Buildpacks" / "Deploy to Cloud Run" flow from console.cloud.google.com**;
+that flow containerizes web apps and has nothing to build here (it's what
+causes stray "missing Ruby" style failures — it's trying to detect a web
+runtime that doesn't exist in this repo).
+
+To build a release bundle:
+
+```bash
+cd android
+./gradlew bundleRelease \
+  -PMAPS_API_KEY=... \
+  -PRELEASE_STORE_FILE=/path/to/release.keystore \
+  -PRELEASE_STORE_PASSWORD=... \
+  -PRELEASE_KEY_ALIAS=... \
+  -PRELEASE_KEY_PASSWORD=...
+```
+
+Output: `android/app/build/outputs/bundle/release/app-release.aab`, ready to
+upload to the Play Console. Without the `RELEASE_*` properties, `release`
+builds fall back to the checked-in debug keystore (fine for local testing,
+**not** accepted by Play Store).
+
+The repo's [`cloudbuild.yaml`](../cloudbuild.yaml) runs this same Gradle build
+in Cloud Build if you want CI to produce the `.aab` artifact for you.
