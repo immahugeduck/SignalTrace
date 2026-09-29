@@ -1,13 +1,5 @@
 import { NativeEventEmitter, NativeModules } from 'react-native';
-import { AppTrafficSample, TrafficSample } from '@/types';
-
-/**
- * Typed access to the SignalTrace native Android modules. Both modules are
- * implemented in Kotlin under android/app/src/main/java/com/signaltrace and
- * registered by SignalTracePackage. When the JS runs outside a build that
- * includes the native side (e.g. Metro on a plain device, or unit tests), the
- * modules are `undefined`; every consumer must guard for that and fall back.
- */
+import { AppTrafficSample, TrafficSample, WifiSecurity } from '@/types';
 
 export interface NativeCellReading {
   radioType?: string;
@@ -27,25 +19,16 @@ export interface NativeCellReading {
 }
 
 export interface CellScannerModule {
-  /** Returns all visible cells (serving + neighboring) from TelephonyManager. */
   getCellInfo(): Promise<NativeCellReading[]>;
 }
 
 export interface TrafficModule {
-  /** Device-wide cumulative rx/tx byte counters since boot (TrafficStats). */
   getDeviceTraffic(): Promise<TrafficSample>;
-  /**
-   * Per-app cumulative traffic over [start, end] using NetworkStatsManager.
-   * Requires PACKAGE_USAGE_STATS special access; resolves to [] otherwise.
-   */
   getAppTraffic(startMillis: number, endMillis: number): Promise<AppTrafficSample[]>;
-  /** Whether PACKAGE_USAGE_STATS has been granted for this app. */
   hasUsageAccess(): Promise<boolean>;
-  /** Opens the system Usage Access settings screen so the user can grant it. */
   requestUsageAccess(): Promise<void>;
 }
 
-/** Raw BLE advertisement payload emitted by the native scanner. */
 export interface NativeBleDevice {
   address: string;
   name?: string;
@@ -75,11 +58,26 @@ export interface OrientationModule {
   removeListeners(count: number): void;
 }
 
+export interface NativeWifiAp {
+  ssid: string;
+  bssid: string;
+  capabilities: string;
+  rssi: number;
+  frequency: number;
+  band: string;
+  security: WifiSecurity;
+}
+
+export interface WifiScannerModule {
+  scanWifi(): Promise<NativeWifiAp[]>;
+}
+
 interface NativeModuleRegistry {
   SignalTraceCellScanner?: CellScannerModule;
   SignalTraceTraffic?: TrafficModule;
   SignalTraceBleScanner?: BleScannerModule;
   SignalTraceOrientation?: OrientationModule;
+  SignalTraceWifiScanner?: WifiScannerModule;
 }
 
 const modules = NativeModules as NativeModuleRegistry;
@@ -94,7 +92,9 @@ export const bleScannerModule: BleScannerModule | undefined = modules.SignalTrac
 export const orientationModule: OrientationModule | undefined =
   modules.SignalTraceOrientation;
 
-/** Native event names emitted through RCTDeviceEventEmitter. */
+export const wifiScannerModule: WifiScannerModule | undefined =
+  modules.SignalTraceWifiScanner;
+
 export const BLE_DEVICE_EVENT = 'SignalTraceBleDevice';
 export const BLE_SCAN_FAILED_EVENT = 'SignalTraceBleScanFailed';
 export const HEADING_EVENT = 'SignalTraceHeading';
