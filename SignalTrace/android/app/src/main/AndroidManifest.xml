@@ -1,20 +1,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Network + connection state -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission
+        android:name="android.permission.NEARBY_WIFI_DEVICES"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="t" />
 
-    <!-- Cell tower / signal scanning. Fine location is required by
-         TelephonyManager.getAllCellInfo() to return identities. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
-    <!-- Bluetooth LE scanning + tracking. BLUETOOTH_SCAN/CONNECT are the
-         Android 12+ runtime permissions; the legacy BLUETOOTH/BLUETOOTH_ADMIN
-         cover older releases. usesPermissionFlags=neverForLocation lets us scan
-         without location on 12+ (we do not derive location from BLE). -->
     <uses-permission
         android:name="android.permission.BLUETOOTH_SCAN"
         android:usesPermissionFlags="neverForLocation"
@@ -29,14 +28,13 @@
     <uses-feature
         android:name="android.hardware.bluetooth_le"
         android:required="false" />
+    <uses-feature
+        android:name="android.hardware.wifi"
+        android:required="false" />
 
-    <!-- Per-app data traffic monitoring (NetworkStatsManager). Special access;
-         granted by the user from the system Usage Access settings screen. -->
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
-
-    <!-- Query installed apps so per-uid traffic can be labelled. -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
 
@@ -47,8 +45,6 @@
         android:allowBackup="false"
         android:theme="@style/AppTheme"
         android:supportsRtl="true">
-        <!-- Injected at build time from the MAPS_API_KEY placeholder (see
-             app/build.gradle). react-native-maps needs this to render. -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />
