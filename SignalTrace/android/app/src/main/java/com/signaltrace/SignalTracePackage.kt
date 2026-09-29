@@ -15,6 +15,7 @@ class SignalTracePackage : ReactPackage {
             TrafficModule(reactContext),
             BleScannerModule(reactContext),
             OrientationModule(reactContext),
+            WifiScannerModule(reactContext),
         )
 
     override fun createViewManagers(
